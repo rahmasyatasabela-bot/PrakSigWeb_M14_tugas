@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV Rahma Syatasabela</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+font-family:'Poppins', sans-serif;
+background:#f4f1ea;
+color:#333;
+transition:0.3s;
+}
+
+/* DARK MODE */
+.dark{
+background:#121212;
+color:white;
+}
+
+/* HEADER */
+.header{
+background:#3f5c4b;
+color:white;
+padding:45px 70px;
+position:relative;
+}
+
+.header h1{
+font-family:'Playfair Display', serif;
+font-size:42px;
+letter-spacing:3px;
+}
+
+.header p{
+font-size:14px;
+margin-top:5px;
+}
+
+.profile-pic{
+position:absolute;
+right:70px;
+top:30px;
+width:160px;
+height:160px;
+border-radius:50%;
+border:6px solid white;
+object-fit:cover;
+}
+
+/* DARK MODE BUTTON */
+.dark-btn{
+position:absolute;
+left:70px;
+top:30px;
+padding:8px 18px;
+border:none;
+border-radius:20px;
+background:#222;
+color:white;
+cursor:pointer;
+}
+
+/* NAV */
+nav{
+background:#d8d2c5;
+display:flex;
+justify-content:center;
+gap:15px;
+padding:15px;
+}
+
+nav button{
+padding:8px 20px;
+border:none;
+border-radius:20px;
+background:#3f5c4b;
+color:white;
+cursor:pointer;
+font-size:14px;
+}
+
+/* PROFILE */
+.profile-box{
+margin:40px 70px;
+border:2px solid #bfb8aa;
+padding:25px;
+}
+
+.profile-box h2{
+font-family:'Playfair Display', serif;
+font-size:28px;
+color:#3f5c4b;
+margin-bottom:15px;
+}
+
+.profile-box p{
+text-align:justify;
+line-height:1.8;
+font-size:14px;
+}
+
+/* DOWNLOAD */
+.download-section{
+text-align:center;
+margin:20px 0;
+}
+
+.download-btn{
+display:inline-block;
+padding:12px 28px;
+border-radius:25px;
+background:#3f5c4b;
+color:white;
+text-decoration:none;
+font-size:14px;
+}
+
+/* GRID */
+.container{
+display:grid;
+grid-template-columns: 1fr 2px 2fr;
+padding:20px 70px 60px 70px;
+gap:40px;
+}
+
+.divider{background:#bfb8aa;}
+
+.section{margin-bottom:35px;}
+
+.section h3{
+font-family:'Playfair Display', serif;
+font-size:24px;
+color:#3f5c4b;
+margin-bottom:15px;
+}
+
+.section p,.section li{
+font-size:14px;
+line-height:1.8;
+text-align:justify;
+}
+
+ul{padding-left:18px;}
+
+/* EDUCATION */
+.education-timeline{
+position:relative;
+margin-top:20px;
+padding-left:30px;
+}
+
+.education-timeline::before{
+content:'';
+position:absolute;
+left:15px;
+top:5px;
+width:2px;
+height:100%;
+background:#3f5c4b;
+}
+
+.edu-item{
+position:relative;
+margin-bottom:30px;
+padding-left:30px;
+}
+
+.edu-item::before{
+content:'';
+position:absolute;
+left:7px;
+top:6px;
+width:16px;
+height:16px;
+background:#3f5c4b;
+border-radius:50%;
+}
+
+.edu-year{
+font-size:13px;
+color:#777;
+}
+
+/* EXPERIENCE FILTER */
+.filter{
+margin-bottom:15px;
+}
+
+.filter button{
+padding:6px 15px;
+border:none;
+border-radius:20px;
+background:#3f5c4b;
+color:white;
+cursor:pointer;
+margin-right:5px;
+}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+.container{grid-template-columns:1fr;}
+.divider{display:none;}
+.profile-pic{position:static;margin-top:20px;}
+.header{text-align:center;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+
+<button class="dark-btn" id="darkModeBtn">🌙 Dark Mode</button>
+
+<h1>RAHMA SYATASABELA</h1>
+<p>Teknologi Survei dan Pemetaan Dasar – Universitas Gadjah Mada</p>
+
+<img src="Rahma Syatasabela_background.jpeg" class="profile-pic">
+
+</div>
+
+<nav>
+<button onclick="scrollToSection('profile')">Profile</button>
+<button onclick="scrollToSection('education')">Education</button>
+<button onclick="scrollToSection('organization')">Organization</button>
+<button onclick="scrollToSection('experience')">Experience</button>
+<button onclick="scrollToSection('skill')">Skill</button>
+<button onclick="scrollToSection('contact')">Contact</button>
+</nav>
+
+<div class="profile-box" id="profile">
+<h2>Profile</h2>
+
+<p>
+Mahasiswa Program Studi Teknologi Survei dan Pemetaan Dasar, Sekolah Vokasi Universitas Gadjah Mada, 
+yang memiliki minat dan kompetensi dalam bidang survei pemetaan, GNSS, serta analisis data geospasial. 
+Berpengalaman dalam pengolahan dan visualisasi data spasial menggunakan perangkat lunak seperti ArcGIS Pro dan QGIS. 
+Terbiasa bekerja secara sistematis, teliti, serta memiliki orientasi terhadap ketepatan dan kualitas hasil pekerjaan. 
+Mampu beradaptasi dengan lingkungan kerja yang dinamis dan siap berkontribusi secara profesional dalam proyek 
+survei, pemetaan, maupun pengolahan data geospasial.
+</p>
+
+</div>
+
+<div class="download-section">
+<a href="Rahma Syatasabela_CV.pdf" class="download-btn" download>
+⬇ Download Curriculum Vitae (PDF)
+</a>
+</div>
+
+<div class="container">
+
+<div>
+
+<div class="section" id="education">
+<h3>Education</h3>
+
+<div class="education-timeline">
+
+<div class="edu-item">
+<strong>Universitas Gadjah Mada</strong>
+<div>Teknologi Survei dan Pemetaan Dasar</div>
+<div class="edu-year">2024 – Sekarang</div>
+</div>
+
+<div class="edu-item">
+<strong>SMA Negeri 2 Yogyakarta</strong>
+<div class="edu-year">2021 – 2024</div>
+</div>
+
+</div>
+
+</div>
+
+<div class="section" id="skill">
+<h3>Skill</h3>
+
+<p><strong>Hard Skills</strong></p>
+
+<p>
+Menguasai pengolahan data geospasial dan pemetaan dasar menggunakan ArcGIS Pro dan QGIS Desktop 
+dengan pengalaman dalam visualisasi serta analisis data spasial. Terampil menggunakan Microsoft Office 
+(Word, Excel, PowerPoint) serta Canva dan Visual Studio Code.
+</p>
+
+<br>
+
+<p><strong>Soft Skills</strong></p>
+
+<p>
+Memiliki kemampuan manajemen waktu yang baik, mampu bekerja secara kolaboratif dalam tim, 
+serta menunjukkan kepemimpinan dan kemampuan berpikir kritis dalam menyelesaikan permasalahan.
+</p>
+
+</div>
+
+<div class="section" id="contact">
+
+<h3>Contact</h3>
+
+<p>📞 +62 896-5009-5164</p>
+<p>📧 rahmasyatasabela@mail.ugm.ac.id</p>
+
+<h3>Kirim Pesan</h3>
+
+<form id="contactForm">
+
+<input type="text" id="nama" placeholder="Nama" style="width:100%;padding:8px;margin-bottom:10px">
+
+<input type="email" id="email" placeholder="Email" style="width:100%;padding:8px;margin-bottom:10px">
+
+<textarea id="pesan" placeholder="Pesan" style="width:100%;padding:8px;margin-bottom:10px"></textarea>
+
+<button type="submit">Kirim</button>
+
+</form>
+
+</div>
+
+</div>
+
+<div class="divider"></div>
+
+<div>
+
+<div class="section" id="organization">
+<h3>Organization</h3>
+
+<ul>
+<li>KMTSP – Staff Hubungan Masyarakat</li>
+<li>Karang Taruna RW 01 Patran – Sekretaris</li>
+<li>Remaja Masjid – Sekretaris</li>
+<li>Remaja Masjid – Anggota</li>
+</ul>
+
+</div>
+
+<div class="section" id="experience">
+
+<h3>Experience</h3>
+
+<div class="filter">
+
+<button onclick="filterExperience('all')">All</button>
+<button onclick="filterExperience('mc')">MC</button>
+<button onclick="filterExperience('dekor')">Dekorasi</button>
+<button onclick="filterExperience('humas')">HUMAS</button>
+
+</div>
+
+<ul>
+
+<li class="humas">Hubungan Masyarakat – SPATIAL 2025</li>
+
+<li class="mc">Master of Ceremony – Pionir Permadani 2025</li>
+<li class="mc">Master of Ceremony – KOMPAS 2025</li>
+<li class="mc">Master of Ceremony – GeoShare 2025</li>
+
+<li class="dekor">SAF – Divisi Dekorasi (2022)</li>
+<li class="dekor">Pentung – Divisi Dekorasi (2023)</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* SCROLL MENU */
+
+function scrollToSection(id){
+document.getElementById(id).scrollIntoView({behavior:"smooth"});
+}
+
+/* DARK MODE */
+
+const darkBtn = document.getElementById("darkModeBtn");
+
+darkBtn.addEventListener("click",function(){
+document.body.classList.toggle("dark");
+});
+
+/* FILTER EXPERIENCE */
+
+function filterExperience(category){
+
+const items=document.querySelectorAll("#experience li");
+
+items.forEach(function(item){
+
+if(category==="all"){
+item.style.display="list-item";
+}
+else{
+
+if(item.classList.contains(category)){
+item.style.display="list-item";
+}
+else{
+item.style.display="none";
+}
+
+}
+
+});
+
+}
+
+/* FORM VALIDATION */
+
+const form=document.getElementById("contactForm");
+
+form.addEventListener("submit",function(event){
+
+event.preventDefault();
+
+const nama=document.getElementById("nama").value;
+const email=document.getElementById("email").value;
+const pesan=document.getElementById("pesan").value;
+
+if(nama===""||email===""||pesan===""){
+alert("Semua field harus diisi!");
+}
+else{
+alert("Pesan berhasil dikirim!");
+form.reset();
+}
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width" />
+    <title>WebGIS Sebaran Kepadatan Penduduk dan Fasilitas Umum Kota Yogyakarta</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/leaflet.css" />
+    <link rel="stylesheet" href="css/L.Control.Layers.Tree.css" />
+    <link rel="stylesheet" href="css/qgis2web.css" />
+
+    <style>
+      :root {
+        --jogja-green: #1b4332;
+        --jogja-gold: #d4af37;
+        --jogja-cream: #fffdf5;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        overflow-y: auto;
+      }
+      body {
+        padding-top: 70px;
+        background-color: var(--jogja-cream);
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      /* Navbar */
+      .navbar-custom {
+        background-color: var(--jogja-green);
+        border-bottom: 3px solid var(--jogja-gold);
+      }
+      .navbar-custom .navbar-brand,
+      .navbar-custom .nav-link {
+        color: white !important;
+        font-weight: bold;
+      }
+
+      /* HERO SECTION */
+      .hero-section {
+        padding: 100px 0 90px 0;
+        background: linear-gradient(rgba(27, 67, 50, 0.4), rgba(27, 67, 50, 0.6)), url("https://kompaspedia.kompas.id/wp-content/uploads/2021/07/20160802DRA502-scaled.jpg");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        color: white;
+        text-align: center;
+      }
+
+      .btn-gold-hero {
+        background-color: var(--jogja-gold);
+        color: black;
+        font-weight: bold;
+        border: none;
+        padding: 10px 30px;
+        border-radius: 50px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 20px;
+        transition: 0.3s;
+      }
+
+      .btn-gold-hero:hover {
+        background-color: white;
+        color: var(--jogja-green);
+      }
+
+      .header-banner {
+        width: 100%;
+        max-height: 298px;
+        object-fit: cover;
+        object-position: bottom;
+        border-bottom: 5px solid var(--jogja-gold);
+      }
+
+      /* Map Section */
+      #map {
+        width: 100%;
+        height: 600px;
+        border-radius: 15px;
+        border: 3px solid var(--jogja-green);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Kotak Rekapitulasi Statistik */
+      .stat-box {
+        background: white;
+        border-radius: 15px;
+        border-top: 5px solid var(--jogja-gold);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        margin-top: -180px;
+        position: relative;
+        z-index: 1001;
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .stat-item {
+        text-align: center;
+        padding: 10px;
+        border-right: 1px solid #eee;
+      }
+      .stat-item:last-child {
+        border-right: none;
+      }
+      .stat-number {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--jogja-green);
+      }
+      .stat-label {
+        font-size: 0.75rem;
+        color: #666;
+        text-transform: uppercase;
+        font-weight: bold;
+      }
+
+      /*  KOTAK STATISTIK */
+      .stat-link {
+        text-decoration: none !important;
+        display: block;
+        color: inherit;
+        position: relative; /* Penting agar tidak tertutup banner */
+        z-index: 1002; /* Penting agar kotak bisa diklik */
+      }
+
+      .stat-card {
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease,
+          border-bottom 0.3s ease;
+      }
+
+      .stat-link:hover .stat-card {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+        border-bottom: 4px solid var(--jogja-gold) !important;
+      }
+
+      /* Legenda Custom Map */
+      .custom-legend {
+        background: white;
+        padding: 15px;
+        line-height: 22px;
+        color: #333;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        border-left: 5px solid var(--jogja-gold);
+        font-size: 13px;
+        max-width: 250px;
+      }
+      .custom-legend i {
+        width: 20px;
+        height: 10px;
+        float: left;
+        margin-right: 8px;
+        margin-top: 6px;
+        opacity: 0.8;
+      }
+      .legend-icon {
+        width: 20px;
+        text-align: center;
+        margin-right: 8px;
+        display: inline-block;
+      }
+
+      /* GALERI KOTAK KECIL HORIZONTAL SCROLL */
+      .gallery-scroll-container {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 20px;
+        padding-bottom: 15px;
+        scroll-behavior: smooth;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        justify-content: center;
+      }
+
+      .gallery-scroll-container::-webkit-scrollbar {
+        display: none;
+      }
+
+      .gallery-card {
+        flex: 0 0 auto;
+        width: 240px;
+      }
+
+      @media (max-width: 768px) {
+        .gallery-scroll-container {
+          justify-content: flex-start;
+        }
+      }
+
+      /* Profil & Kontak */
+      .card-profile {
+        border: none;
+        border-radius: 20px;
+        background: white;
+        padding: 30px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      }
+      .contact-form {
+        background-color: var(--jogja-green);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        border-top: 5px solid var(--jogja-gold);
+      }
+      .btn-gold-submit {
+        background: var(--jogja-gold);
+        color: var(--jogja-green);
+        font-weight: bold;
+        border: none;
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+      }
+
+      footer {
+        background: var(--jogja-green);
+        color: white;
+        padding: 20px 0;
+        margin-top: 50px;
+        border-top: 3px solid var(--jogja-gold);
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">GEO-YOGYAKARTA</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="#home">Beranda</a></li>
+            <li class="nav-item"><a class="nav-link" href="#map-section">Peta</a></li>
+            <li class="nav-item"><a class="nav-link" href="#informasi">Informasi</a></li>
+            <li class="nav-item"><a class="nav-link" href="#gallery">Galeri</a></li>
+            <li class="nav-item"><a class="nav-link" href="#profile-section">Penyusun</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="CV_RAHMASYATASABELA_FIX.html" target="_blank">CV Penyusun</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <header id="home" class="hero-section">
+      <div class="container">
+        <h1 class="display-5 fw-bold">KEPADATAN PENDUDUK DAN FASILITAS UMUM KOTA YOGYAKARTA</h1>
+        <p class="lead">Analisis Geospasial Wilayah Kota Yogyakarta Tahun 2025</p>
+        <a href="#map-section" class="btn-gold-hero">Eksplorasi Peta</a>
+      </div>
+    </header>
+
+    <img src="https://kompaspedia.kompas.id/wp-content/uploads/2021/07/20160802DRA502-scaled.jpg" class="header-banner" alt="Kota Yogyakarta" />
+
+    <div class="container mt-4">
+      <div class="row g-3 text-center">
+        <div class="col-md-3 col-sm-6">
+          <a href="#info-sma" class="stat-link">
+            <div class="card stat-card shadow-sm border-0 py-4 h-100">
+              <h3 class="fw-bold text-dark">45</h3>
+              <p class="small text-muted fw-bold mb-0">TOTAL SMA</p>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <a href="#info-kecamatan" class="stat-link">
+            <div class="card stat-card shadow-sm border-0 py-4 h-100">
+              <h3 class="fw-bold text-dark">14</h3>
+              <p class="small text-muted fw-bold mb-0">KECAMATAN</p>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <a href="#info-kelurahan" class="stat-link">
+            <div class="card stat-card shadow-sm border-0 py-4 h-100">
+              <h3 class="fw-bold text-dark">45</h3>
+              <p class="small text-muted fw-bold mb-0">KELURAHAN</p>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <div class="card shadow-sm border-0 py-4 h-100" style="background-color: #f8f9fa; cursor: default">
+            <h3 class="fw-bold" style="color: var(--jogja-green)">12.664</h3>
+            <p class="small text-muted fw-bold mb-0">PENDUDUK</p>
+          </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <a href="#info-pos-polisi" class="stat-link">
+            <div class="card stat-card shadow-sm border-0 py-4 h-100">
+              <h3 class="fw-bold text-dark">27++</h3>
+              <p class="small text-muted fw-bold mb-0">POS POLISI</p>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <a href="#info-rs-umum" class="stat-link">
+            <div class="card stat-card shadow-sm border-0 py-4 h-100">
+              <h3 class="fw-bold text-dark">11++</h3>
+              <p class="small text-muted fw-bold mb-0">RS UMUM</p>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <a href="#info-cagar-budaya" class="stat-link">
+            <div class="card stat-card shadow-sm border-0 py-4 h-100">
+              <h3 class="fw-bold text-dark">48++</h3>
+              <p class="small text-muted fw-bold mb-0">CAGAR BUDAYA</p>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <a href="#info-kelas-kepadatan" class="stat-link">
+            <div class="card stat-card shadow-sm border-0 py-4 h-100">
+              <h3 class="fw-bold text-dark">7</h3>
+              <p class="small text-muted fw-bold mb-0">KELAS KEPADATAN</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <section id="map-section" class="py-4">
+      <div class="container">
+        <div class="text-center mb-4">
+          <h2 class="fw-bold" style="color: var(--jogja-green)">PETA KEPADATAN PENDUDUK DAN FASILITAS UMUM KOTA</h2>
+          <div style="width: 80px; height: 4px; background: var(--jogja-gold); margin: auto"></div>
+        </div>
+
+        <div id="map"></div>
+      </div>
+    </section>
+
+    <section id="informasi" class="py-5" style="background-color: #fcfcfc">
+      <div class="container py-4">
+        <div class="text-center mb-5">
+          <h2 class="fw-bold" style="color: var(--jogja-green); text-transform: uppercase">Tinjauan Spasial Kewilayahan</h2>
+          <div style="width: 80px; height: 4px; background: var(--jogja-gold); margin: 15px auto"></div>
+          <p class="text-muted" style="max-width: 700px; margin: auto">Konteks keruangan dan demografis yang menjadi landasan analisis pemetaan kawasan.</p>
+        </div>
+
+        <div class="row g-4 text-justify" style="text-align: justify">
+          <div class="col-md-4">
+            <div class="p-4 bg-white rounded shadow-sm h-100" style="border-top: 4px solid var(--jogja-green)">
+              <h5 class="fw-bold mb-3"><i class="fas fa-city me-2" style="color: var(--jogja-gold)"></i>Karakteristik Wilayah</h5>
+              <p class="small text-secondary" style="line-height: 1.7">
+                Kota Yogyakarta merupakan wilayah perkotaan di Provinsi Daerah Istimewa Yogyakarta yang memiliki luas relatif kecil dibandingkan kabupaten di sekitarnya. Wilayah ini didominasi oleh penggunaan lahan terbangun, seperti
+                permukiman, fasilitas pendidikan, perdagangan, dan jasa. Sebagai pusat aktivitas pemerintahan, pendidikan, dan ekonomi, Kota Yogyakarta memiliki tingkat mobilitas penduduk yang tinggi, baik dari penduduk tetap maupun
+                pendatang. Kondisi tersebut berpengaruh terhadap pola persebaran penduduk yang cenderung terkonsentrasi pada wilayah tertentu.
+              </p>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="p-4 bg-white rounded shadow-sm h-100" style="border-top: 4px solid var(--jogja-green)">
+              <h5 class="fw-bold mb-3"><i class="fas fa-users me-2" style="color: var(--jogja-gold)"></i>Dinamika Demografi</h5>
+              <p class="small text-secondary" style="line-height: 1.7">
+                Kepadatan penduduk di Kota Yogyakarta tergolong tinggi jika dibandingkan dengan wilayah lain di Daerah Istimewa Yogyakarta. Persebarannya tidak merata, di mana beberapa kecamatan menunjukkan tingkat kepadatan yang lebih
+                tinggi dibandingkan kecamatan lainnya. Perbedaan ini umumnya dipengaruhi oleh faktor ketersediaan lahan, fungsi kawasan, serta kedekatan dengan pusat aktivitas seperti kawasan pendidikan dan perdagangan. Oleh karena itu,
+                analisis kepadatan penduduk menjadi penting untuk memahami tekanan terhadap ruang dan kebutuhan pelayanan di masing-masing wilayah.
+              </p>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="p-4 bg-white rounded shadow-sm h-100" style="border-top: 4px solid var(--jogja-green)">
+              <h5 class="fw-bold mb-3"><i class="fas fa-hospital me-2" style="color: var(--jogja-gold)"></i>Infrastruktur Publik</h5>
+              <p class="small text-secondary" style="line-height: 1.7">
+                Fasilitas umum di Kota Yogyakarta meliputi berbagai sarana pelayanan seperti pendidikan, kesehatan, pemerintahan, dan fasilitas sosial lainnya. Secara umum, fasilitas tersebut tersebar di seluruh wilayah kota, namun tingkat
+                ketersediaannya dapat berbeda antar kecamatan. Analisis persebaran fasilitas umum diperlukan untuk mengetahui sejauh mana fasilitas tersebut dapat menjangkau penduduk, terutama pada wilayah dengan kepadatan tinggi. Informasi
+                ini penting sebagai dasar dalam mendukung perencanaan wilayah dan peningkatan pelayanan publik yang lebih merata.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 pt-5 border-top">
+          <h3 class="fw-bold text-center mb-5" style="color: var(--jogja-green)">Detail Data Kewilayahan</h3>
+
+          <section id="info-kecamatan" class="mb-5 p-4 bg-white shadow-sm rounded border-start border-4" style="border-color: var(--jogja-gold) !important">
+            <h5 class="fw-bold text-dark mb-3"><i class="fas fa-map-marked-alt me-2"></i>Daftar 14 Kecamatan & 45 Kelurahan</h5>
+            <p class="text-muted small">Secara administratif, Kota Yogyakarta terbagi menjadi 14 Kemantren (Kecamatan) dan 45 Kelurahan sebagai berikut:</p>
+            <div class="row small">
+              <div class="col-md-4 mb-3">
+                <ul class="list-unstyled">
+                  <li><strong>1. Kecamatan Danurejan:</strong> Bausasran, Tegalpanggung, Suryatmajan</li>
+                  <li><strong>2. Kecamatan Gedongtengen:</strong> Pringgokusuman, Sosromenduran</li>
+                  <li><strong>3. Kecamatan Gondokusuman:</strong> Baciro, Demangan, Klitren, Kotabaru, Terban</li>
+                  <li><strong>4. Kecamatan Gondomanan:</strong> Ngupasan, Prawirodirjan</li>
+                  <li><strong>5. Kecamatan Jetis:</strong> Bumijo, Cokrodiningratan, Gowongan</li>
+                </ul>
+              </div>
+              <div class="col-md-4 mb-3">
+                <ul class="list-unstyled">
+                  <li><strong>6. Kecamatan Kotagede:</strong> Prenggan, Purbayan, Rejowinangun</li>
+                  <li><strong>7. Kecamatan Kraton:</strong> Panembahan, Kadipaten, Patehan</li>
+                  <li><strong>8. Kecamatan Mantrijeron:</strong> Gedongkiwo, Suryodiningratan, Mantrijeron</li>
+                  <li><strong>9. Kecamatan Mergangsan:</strong> Brontokusuman, Keparakan, Wirogunan</li>
+                  <li><strong>10. Kecamatan Ngampilan:</strong> Ngampilan, Notoprajan</li>
+                </ul>
+              </div>
+              <div class="col-md-4 mb-3">
+                <ul class="list-unstyled">
+                  <li><strong>11. Kecamatan Pakualaman:</strong> Gunungketur, Purwokinanti</li>
+                  <li><strong>12. Kecamatan Tegalrejo:</strong> Bener, Karangwaru, Kricak, Tegalrejo</li>
+                  <li><strong>13. Kecamatan Umbulharjo:</strong> Giwangan, Muja Muju, Pandeyan, Semaki, Sorosutan, Tahunan, Warungboto</li>
+                  <li><strong>14. Kecamatan Wirobrajan:</strong> Pakuncen, Patangpuluhan, Wirobrajan</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section id="info-sma" class="mb-5 p-4 bg-white shadow-sm rounded border-start border-4" style="border-color: var(--jogja-gold) !important">
+            <h5 class="fw-bold text-dark mb-3"><i class="fas fa-graduation-cap me-2"></i>Daftar Sekolah Menengah Atas (SMA)</h5>
+            <p class="text-muted small">Sebagian sebaran fasilitas pendidikan jenjang SMA di Kota Yogyakarta meliputi:</p>
+            <div class="row small">
+              <div class="col-md-4">
+                <ul>
+                  <li>SMAN 1 s.d. SMAN 11 YOGYAKARTA</li>
+                  <li>SMA 17 1 Yogyakarta</li>
+                  <li>SMA BINA ANAK SHOLEH</li>
+                  <li>SMA ISLAM DARUSSALAM</li>
+                  <li>SMA Labschool UNY</li>
+                  <li>SMA Masjid Syuhada</li>
+                  <li>SMA UII YOGYAKARTA</li>
+                  <li>SMAS BHINNEKA TUNGGAL IKA</li>
+                  <li>SMAS BOPKRI 1 & BOPKRI 2</li>
+                  <li>SMAS BUDI LUHUR</li>
+                </ul>
+              </div>
+              <div class="col-md-4">
+                <ul>
+                  <li>SMAS BUDYA WACANA</li>
+                  <li>SMAS GADJAH MADA</li>
+                  <li>SMAS GOTONG ROYONG</li>
+                  <li>SMAS IT ABU BAKAR</li>
+                  <li>SMAS KATOLIK SANG TIMUR</li>
+                  <li>SMAS MA ARIF YOGYAKARTA</li>
+                  <li>SMAS MUHAMMADIYAH 1 s.d. 7</li>
+                  <li>SMAS PANGUDI LUHUR</li>
+                </ul>
+              </div>
+              <div class="col-md-4">
+                <ul>
+                  <li>SMAS PERAK</li>
+                  <li>SMAS PIRI 1 YOGYAKARTA</li>
+                  <li>SMAS SANTA MARIA</li>
+                  <li>SMAS SANTO THOMAS</li>
+                  <li>SMAS STELLA DUCE 1 & STELLA DUCE 2</li>
+                  <li>SMAS SULTAN AGUNG</li>
+                  <li>SMAS TAMAN MADYA IP</li>
+                  <li>SMAS TAMAN MADYA JETIS</li>
+                </ul>
+              </div>
+            </div>
+            <div class="alert alert-warning mt-3 py-2 small" role="alert"><i class="fas fa-info-circle me-1"></i> <strong>Catatan:</strong><em> Peta ini hanya mencantumkan sebagian SMA yang terletak pada Kota Yogyakarta!</em></div>
+          </section>
+
+          <section id="info-pos-polisi" class="mb-5 p-4 bg-white shadow-sm rounded border-start border-4" style="border-color: var(--jogja-gold) !important">
+            <h5 class="fw-bold text-dark mb-3"><i class="fas fa-shield-alt me-2"></i>Lokasi Pos Polisi</h5>
+            <p class="text-muted small">Titik Pos Polisi (Pos Pol) yang terdata dalam peta tersebar di 27 lokasi strategis, yaitu:</p>
+            <div class="row small">
+              <div class="col-md-4">
+                <ul>
+                  <li>Pos Pol 1 Gejayan</li>
+                  <li>Pos Pol 2 Galeria</li>
+                  <li>Pos Pol 3 Gramedia</li>
+                  <li>Pos Pol 4 Simanjuntak</li>
+                  <li>Pos Pol 5 Tugu</li>
+                  <li>Pos Pol 6 Pingit</li>
+                  <li>Pos Pol 7 Jetis</li>
+                  <li>Pos Pol 8 BPK</li>
+                  <li>Pos Pol 9 Jlagran</li>
+                </ul>
+              </div>
+              <div class="col-md-4">
+                <ul>
+                  <li>Pos Pol 10 Teteg</li>
+                  <li>Pos Pol 11 Gardu Anim</li>
+                  <li>Pos Pol 12 Jambu</li>
+                  <li>Pos Pol 13 Gedong Kuning</li>
+                  <li>Pos Pol 14 SGM</li>
+                  <li>Pos Pol 15 Sentul</li>
+                  <li>Pos Pol 16 Gondomanan</li>
+                  <li>Pos Pol 17 Pos Besar</li>
+                  <li>Pos Pol 18 Ngabean</li>
+                </ul>
+              </div>
+              <div class="col-md-4">
+                <ul>
+                  <li>Pos Pol 19 Wirobrajan</li>
+                  <li>Pos Pol 20 Patangpuluhan</li>
+                  <li>Pos Pol 21 Ngasem</li>
+                  <li>Pos Pol 22 JTB</li>
+                  <li>Pos Pol 23 Gading</li>
+                  <li>Pos Pol 24 JTT</li>
+                  <li>Pos Pol 25 Sisingamangaraja</li>
+                  <li>Pos Pol 26 APPI</li>
+                  <li>Pos Pol 27 Rejowinangun</li>
+                </ul>
+              </div>
+            </div>
+            <div class="alert alert-warning mt-3 py-2 small" role="alert">
+              <i class="fas fa-info-circle me-1"></i> <strong>Catatan:</strong><em> Peta ini hanya mencantumkan sebagian pos polisi yang tersebar di Kota Yogyakarta, belum termasuk dengan kantor polisi! </em>
+            </div>
+          </section>
+
+          <section id="info-rs-umum" class="mb-5 p-4 bg-white shadow-sm rounded border-start border-4" style="border-color: var(--jogja-gold) !important">
+            <h5 class="fw-bold text-dark mb-3"><i class="fas fa-hospital me-2"></i>Daftar Rumah Sakit</h5>
+            <p class="text-muted small">Fasilitas kesehatan rujukan tingkat lanjut di Kota Yogyakarta yang terdapat dalam atribut peta meliputi:</p>
+            <div class="row small">
+              <div class="col-md-6">
+                <ul>
+                  <li>RS Happyland</li>
+                  <li>RS Ludira Husada Tama</li>
+                  <li>RS Panti Rapih</li>
+                  <li>RS Dr. Sutarto</li>
+                  <li>RS Jogja</li>
+                  <li>RSI Hidayatullah</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <ul>
+                  <li>RS Bethesda Lempuyangwangi</li>
+                  <li>RS Bethesda</li>
+                  <li>RS PKU Muhammadiyah</li>
+                  <li>UPT RS Pratama</li>
+                  <li>RS Siloam</li>
+                </ul>
+              </div>
+            </div>
+            <div class="alert alert-warning mt-3 py-2 small" role="alert"><i class="fas fa-info-circle me-1"></i> <strong>Catatan:</strong><em> Peta ini hanya mencantumkan sebagian RS yang terletak di Kota Yogyakarta!</em></div>
+          </section>
+
+          <section id="info-cagar-budaya" class="mb-5 p-4 bg-white shadow-sm rounded border-start border-4" style="border-color: var(--jogja-gold) !important">
+            <h5 class="fw-bold text-dark mb-3"><i class="fas fa-landmark me-2"></i>Daftar Lokasi Cagar Budaya</h5>
+            <p class="text-muted small">Bangunan dan kawasan warisan budaya yang dilindungi dalam atribut peta meliputi:</p>
+            <div class="row small">
+              <div class="col-md-6">
+                <ul>
+                  <li>Rumah "Phoenix"</li>
+                  <li>Dalem Brontokusuman / nDalem Pugeran (Kediaman Keluarga KGPH. Puger-HB VIII)</li>
+                  <li>Dalem Gede Notoyudan - HB VII</li>
+                  <li>Bangsal Kepatihan Pakualaman</li>
+                  <li>Rumah Tinggal Mariana Puji</li>
+                  <li>Dalem Pujowinatan</li>
+                  <li>Rumah Kalang Kotagede / Rumah Tinggal DR. Nasir Tamara (nDalem NATAN)</li>
+                  <li>Bangunan Kompleks Kantor Dinas Pendidikan Kota Yogyakarta</li>
+                  <li>Asrama Margoyuwono</li>
+                  <li>Masjid Syuhada & Gedung Masjid Margoyuwono</li>
+                  <li>Bangunan Atap Berundak Eks-Salon Coiffeur di Jl. Malioboro No. 1</li>
+                  <li>Rumah Tradisional & Langgar Dhuwur Boharen Kotagede</li>
+                  <li>Bangunan Rumah Tradisional Kotagede Di Alun-alun KG III/776</li>
+                  <li>Rumah di Jl. Jenggotan No. 5A & Rumah di Jl. Ketandan Lor No.66</li>
+                  <li>Gedung Yayasan Bhakti Loka (Eks Chung Hua Tsung Hui)</li>
+                  <li>Rumah di Jalan Sunaryo No. 12 & Gedung Jl. Faridan Muridan Noto No. 21 Kotabaru</li>
+                  <li>Gedung Balai Lab Kesehatan dan Kalibrasi (Eks nDalem Ngadinegaran)</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <ul>
+                  <li>Gedung Dinas Perpustakaan dan Kearsipan (Eks RPH)</li>
+                  <li>Gedung Perpustakaan Alternatif Wilayah Selatan (Eks Gouvernement Inlandsche School)</li>
+                  <li>Los Pasar Di Jalan Pabringan</li>
+                  <li>Gedung di Jl. Kusumanegara No. 159</li>
+                  <li>Menara Sirine (Gaok) di Jalan Hayam Wuruk</li>
+                  <li>Menara Sirine (Gaok) di Jalan Sultan Agung No. 17</li>
+                  <li>Menara Sirine (Gaok) di Plengkung Nirbaya</li>
+                  <li>Menara Sirine (Gaok) di Jalan R.E. Martadinata</li>
+                  <li>Menara Sirine (Gaok) di Jalan Pabringan</li>
+                  <li>Fragmen Arca Nogobondo</li>
+                  <li>Benteng Kraton Mataram Kotagede</li>
+                  <li>Gedung DPRD DIY (Eks Loji Mataram)</li>
+                  <li>Gedung GPIB Marga Mulya</li>
+                  <li>Bak Air Gedongtengen</li>
+                  <li>Monumen Jumenengan Sri Sultan Hamengkubuwono IX Di Kotagede</li>
+                </ul>
+              </div>
+            </div>
+            <div class="alert alert-warning mt-3 py-2 small" role="alert"><i class="fas fa-info-circle me-1"></i> <strong>Catatan:</strong><em> Peta ini hanya mencantumkan sebagian cagar budaya yang terletak pada Kota Yogyakarta!</em></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section id="gallery" class="py-5 bg-white">
+      <div class="container">
+        <div class="text-center mb-5">
+          <h2 class="fw-bold" style="color: var(--jogja-green)">Galeri Wilayah Yogyakarta</h2>
+          <div style="width: 80px; height: 4px; background: var(--jogja-gold); margin: 15px auto"></div>
+        </div>
+
+        <div class="gallery-scroll-container">
+          <div class="gallery-card">
+            <div class="card shadow-sm border-0 h-100">
+              <img src="Kawasan_malioboro.jpg" class="card-img-top" height="200" style="object-fit: cover; object-position: center" alt="Kawasan Malioboro" />
+              <div class="card-body text-center" style="border-top: 3px solid var(--jogja-gold)">
+                <h6 class="fw-bold" style="color: var(--jogja-green); margin-bottom: 5px">Kawasan Malioboro</h6>
+                <p class="small text-muted mb-0" style="font-size: 11px">Pusat Perdagangan</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="gallery-card">
+            <div class="card shadow-sm border-0 h-100">
+              <img src="Keraton.jpg" class="card-img-top" height="200" style="object-fit: cover" alt="Keraton Yogyakarta" />
+              <div class="card-body text-center" style="border-top: 3px solid var(--jogja-gold)">
+                <h6 class="fw-bold" style="color: var(--jogja-green); margin-bottom: 5px">Keraton Yogyakarta</h6>
+                <p class="small text-muted mb-0" style="font-size: 11px">Pusat Sejarah</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="gallery-card">
+            <div class="card shadow-sm border-0 h-100">
+              <img src="Tugu_Yogya.jpg" class="card-img-top" height="200" style="object-fit: cover" alt="Tugu Yogyakarta" />
+              <div class="card-body text-center" style="border-top: 3px solid var(--jogja-gold)">
+                <h6 class="fw-bold" style="color: var(--jogja-green); margin-bottom: 5px">Tugu Yogyakarta</h6>
+                <p class="small text-muted mb-0" style="font-size: 11px">Ikon Kota</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="profile-section" class="py-5">
+      <div class="container">
+        <div class="row g-4 justify-content-center">
+          <div class="col-md-5">
+            <div class="card-profile text-center shadow">
+              <i class="fas fa-user-graduate fa-3x mb-3" style="color: var(--jogja-green)"></i>
+              <h4 class="fw-bold">Rahma Syatasabela</h4>
+              <p class="text-muted small">Program Studi Teknologi Survei dan Pemetaan Dasar<br />Sekolah Vokasi, Universitas Gadjah Mada</p>
+              <hr />
+              <p class="small">Fokus pada analisis geospasial dan pengembangan sistem informasi geografis berbasis web.</p>
+            </div>
+          </div>
+          <div class="col-md-5">
+            <div class="contact-form shadow">
+              <h3><i class="fas fa-envelope me-2"></i>Hubungi Saya</h3>
+              <form action="mailto:rahmasyatasabela@mail.ugm.ac.id" method="post" enctype="text/plain">
+                <input type="text" class="form-control mb-3" placeholder="Nama Anda" name="name" />
+                <textarea class="form-control mb-3" rows="3" placeholder="Pesan Anda" name="message"></textarea>
+                <button type="submit" class="btn-gold-submit">Kirim Ke Email</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>&copy; 2025 WebGIS Kepadatan Penduduk Yogyakarta | TSPD Sekolah Vokasi UGM</p>
+    </footer>
+
+    <script src="js/leaflet.js"></script>
+    <script src="js/L.Control.Layers.Tree.min.js"></script>
+    <script src="js/Autolinker.min.js"></script>
+
+    <script src="data/GeoJSON_Batas_administrasi_kecamatan_khususkotayogya_1.js"></script>
+    <script src="data/sebaran_pos_polisi_kota_yogyakartab3e00dec80c9_2.js"></script>
+    <script src="data/sebaran_lokasi_cagar_budaya_kota_yogyakarta_tahun_2025_3.js"></script>
+    <script src="data/lokasi_kantor_kelurahan_kota_yogyakarta_5.js"></script>
+    <script src="data/lokasi_rumah_sakit_umum_kota_yogyakarta_6.js"></script>
+    <script src="data/sebaran_sma_kota_yogyakarta_7.js"></script>
+
+    <script>
+      var map = L.map("map", { zoomControl: true }).fitBounds([
+        [-7.84, 110.3],
+        [-7.76, 110.43],
+      ]);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+      // 1. Popup untuk SMA, RS, Cagar Budaya, dan Pos Polisi
+      function popUpTitik(feature, layer) {
+        var nama = feature.properties["nama"] || feature.properties["rumah_saki"] || feature.properties["cagar_buda"] || feature.properties["nama_pos"] || "Tanpa Nama";
+        var alamat = feature.properties["alamat"] || "Alamat tidak tersedia";
+        var lat = feature.properties["lat"] || feature.properties["latitude"] || layer.getLatLng().lat.toFixed(5);
+        var lng = feature.properties["long"] || feature.properties["longitude"] || layer.getLatLng().lng.toFixed(5);
+
+        var content = `
+        <div style="min-width: 200px;">
+            <strong style="color: #1b4332; font-size: 14px;">${nama}</strong><br>
+            <small style="color: #666;"><i class="fas fa-map-marker-alt"></i> ${alamat}</small><br>
+            <div style="margin-top: 8px; font-size: 11px; background: #eee; padding: 5px; border-radius: 4px;">
+                <b>Koordinat:</b> ${lat}, ${lng}
+            </div>
+        </div>`;
+        layer.bindPopup(content);
+      }
+
+      // 2. Popup untuk Kelurahan
+      function popUpKelurahan(feature, layer) {
+        var nama = feature.properties["pokja_name"];
+        var lat = feature.properties["tblkoord_1"]; // Lat
+        var lng = feature.properties["tblkoordin"]; // Long
+        var content = `
+        <div style="min-width: 150px;">
+            <strong style="color: #1b4332;">${nama}</strong><br>
+            <div style="margin-top: 5px; font-size: 11px;">
+                <b>Lat:</b> ${lat}<br><b>Long:</b> ${lng}
+            </div>
+        </div>`;
+        layer.bindPopup(content);
+      }
+
+      // 3. Popup untuk Poligon Administrasi (Kecamatan)
+      function popUpKecamatan(feature, layer) {
+        var kec = feature.properties["KECAMATAN"];
+        var pdd = feature.properties["Kpdt_Pdd"];
+        var luas = feature.properties["Luas_Kec"];
+        var content = `
+        <div style="min-width: 180px;">
+            <strong style="color: #1b4332; font-size: 15px;">KECAMATAN ${kec}</strong><br>
+            <circle style="margin: 5px 0;">
+            <table style="width: 100%; font-size: 12px;">
+                <tr><td><b>Penduduk:</b></td><td align="right">${pdd} Jiwa</td></tr>
+                <tr><td><b>Luas:</b></td><td align="right">${luas} m²</td></tr>
+            </table>
+        </div>`;
+        layer.bindPopup(content);
+      }
+
+      function styleKepadatan(feature) {
+        var d = feature.properties["Kpdt_Pdd"];
+        var color = d > 20000 ? "#bd0026" : d > 18000 ? "#df2722" : d > 16000 ? "#f45629" : d > 14000 ? "#fd8d3c" : d > 12000 ? "#feb751" : d > 10000 ? "#fedd79" : "#ffffb2";
+        return { fillColor: color, weight: 1, opacity: 1, color: "white", fillOpacity: 0.8 };
+      }
+
+      function createIconMarker(latlng, iconClass, color) {
+        var icon = L.divIcon({
+          html: `<i class="${iconClass}" style="color: ${color}; font-size: 14px; text-shadow: 0 0 2px #fff;"></i>`,
+          className: "custom-div-icon",
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+        });
+        return L.marker(latlng, { icon: icon });
+      }
+
+      // Layer Poligon Kecamatan
+      var lyrKepadatan = L.geoJson(json_GeoJSON_Batas_administrasi_kecamatan_khususkotayogya_1, {
+        style: styleKepadatan,
+        onEachFeature: popUpKecamatan,
+      }).addTo(map);
+
+      // Layer SMA
+      var lyrSMA = L.geoJson(json_sebaran_sma_kota_yogyakarta_7, {
+        pointToLayer: function (f, l) {
+          return createIconMarker(l, "fas fa-graduation-cap", "#000");
+        },
+        onEachFeature: popUpTitik,
+      }).addTo(map);
+
+      // Layer RS Umum
+      var lyrRS = L.geoJson(json_lokasi_rumah_sakit_umum_kota_yogyakarta_6, {
+        pointToLayer: function (f, l) {
+          return createIconMarker(l, "fas fa-hospital", "#000");
+        },
+        onEachFeature: popUpTitik,
+      }).addTo(map);
+
+      // Layer Kelurahan
+      var lyrLurah = L.geoJson(json_lokasi_kantor_kelurahan_kota_yogyakarta_5, {
+        pointToLayer: function (f, l) {
+          return createIconMarker(l, "fas fa-building", "#000");
+        },
+        onEachFeature: popUpKelurahan,
+      }).addTo(map);
+
+      // Layer Cagar Budaya
+      var lyrCagar = L.geoJson(json_sebaran_lokasi_cagar_budaya_kota_yogyakarta_tahun_2025_3, {
+        pointToLayer: function (f, l) {
+          return createIconMarker(l, "fas fa-landmark", "#000");
+        },
+        onEachFeature: popUpTitik,
+      }).addTo(map);
+
+      // Layer Pos Polisi
+      var lyrPolisi = L.geoJson(json_sebaran_pos_polisi_kota_yogyakartab3e00dec80c9_2, {
+        pointToLayer: function (f, l) {
+          return createIconMarker(l, "fas fa-shield-alt", "#000");
+        },
+        onEachFeature: popUpTitik,
+      }).addTo(map);
+
+      // Legenda Map
+      var legend = L.control({ position: "bottomright" });
+      legend.onAdd = function (map) {
+        var div = L.DomUtil.create("div", "custom-legend");
+        div.innerHTML += "<b>Kepadatan (Jiwa/km²)</b><br>";
+        var grades = [0, 10000, 12000, 14000, 16000, 18000, 20000];
+        var colors = ["#ffffb2", "#fedd79", "#feb751", "#fd8d3c", "#f45629", "#df2722", "#bd0026"];
+        for (var i = 0; i < grades.length; i++) {
+          div.innerHTML += '<i style="background:' + colors[i] + '"></i> ' + grades[i] + (grades[i + 1] ? "&ndash;" + grades[i + 1] + "<br>" : "+");
+        }
+        div.innerHTML += "<br><b>Fasilitas Umum</b><br>";
+        div.innerHTML += '<span class="legend-icon"><i class="fas fa-graduation-cap" style="color:#000"></i></span> SMA<br>';
+        div.innerHTML += '<span class="legend-icon"><i class="fas fa-hospital" style="color:#000"></i></span> RS Umum<br>';
+        div.innerHTML += '<span class="legend-icon"><i class="fas fa-shield-alt" style="color:#000"></i></span> Pos Polisi<br>';
+        div.innerHTML += '<span class="legend-icon"><i class="fas fa-landmark" style="color:#000"></i></span> Cagar Budaya<br>';
+        div.innerHTML += '<span class="legend-icon"><i class="fas fa-building" style="color:#000"></i></span> Kelurahan<br>';
+        return div;
+      };
+      legend.addTo(map);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
